@@ -1,3 +1,5 @@
+from database import SessionLocal
+from models import User
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 import os
@@ -14,3 +16,18 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    db = SessionLocal()
+    tg_user = update.effective_user
+
+    existing = db.query(User).filter(User.username == tg_user.username).first()
+    if not existing:
+        new_user = User(username=tg_user.username)
+        db.add(new_user)
+        db.commit()
+
+    db.close()
+
+    await update.message.reply_text("You’ve been added to the system!")
+    
